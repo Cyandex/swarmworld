@@ -1,0 +1,38 @@
+base_terrain: ASH_PLAIN
+features:
+  - name: Northern iron range
+    terrain: IRON_MOUNTAINS
+    shape: {kind: ellipse, center: [0.28, 0.20], radius: [0.24, 0.15]}
+  - name: Eastern iron range
+    terrain: IRON_MOUNTAINS
+    shape: {kind: ridge, start: [0.72, 0.08], end: [0.92, 0.62], width: 0.09}
+  - name: Glass desert
+    terrain: OBSIDIAN_WASTE
+    shape: {kind: ellipse, center: [0.70, 0.71], radius: [0.24, 0.18]}
+  - name: Brimstone fen
+    terrain: SULFUR_MARSH
+    shape: {kind: ellipse, center: [0.20, 0.76], radius: [0.17, 0.13]}
+  - name: Caldera glass ring
+    terrain: OBSIDIAN_WASTE
+    shape: {kind: ring, center: [0.53, 0.43], inner: 0.09, outer: 0.19}
+  - name: Outer lava ring
+    terrain: LAVA_CHANNEL
+    shape: {kind: ring, center: [0.53, 0.43], inner: 0.07, outer: 0.10}
+  - name: Burning crown
+    terrain: MAGMA_SEA
+    shape: {kind: circle, center: [0.53, 0.43], radius: 0.071}
+  - name: Southern lava run
+    terrain: LAVA_CHANNEL
+    shape: {kind: ridge, start: [0.53, 0.48], end: [0.43, 0.95], width: 0.025}
+  - name: Old west road
+    terrain: ANCIENT_ROAD
+    shape: {kind: ridge, start: [0.03, 0.54], end: [0.45, 0.60], width: 0.018}
+  - name: Old east road
+    terrain: ANCIENT_ROAD
+    shape: {kind: ridge, start: [0.60, 0.58], end: [0.97, 0.88], width: 0.018}
+  - name: Forge enclave
+    terrain: GREAT_FORGE
+    shape: {kind: rectangle, bounds: [0.40, 0.52, 0.60, 0.68]}
+  - name: Proving ground
+    terrain: PROVING_GROUND
+    shape: {kind: rectangle, bounds: [0.63, 0.47, 0.78, 0.59]}

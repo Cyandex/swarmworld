@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biofoundry-world"
+version = "0.1.0"
+description = "A deterministic research environment for scientific language-model swarm experiments"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [{name = "SwarmWorld contributors"}]
+dependencies = [
+  "numpy>=1.26",
+  "PyYAML>=6.0",
+  "tqdm>=4.66",
+  "jsonschema>=4.23",
+  "gymnasium>=1.0",
+  "pettingzoo>=1.24.3",
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+  "websockets>=12",
+]
+
+[project.optional-dependencies]
+analysis = [
+  "matplotlib>=3.8",
+  "pypdf>=5.0",
+  "scikit-learn>=1.4",
+  "sentence-transformers>=5.0",
+  "umap-learn>=0.5.7",
+]
+technology-images = [
+  "matplotlib>=3.8",
+  "openai>=2.0",
+  "Pillow>=10",
+  "pypdf>=5.0",
+]
+local = [
+  "transformers>=4.57",
+]
+dev = [
+  "pytest>=8",
+  "ruff>=0.5",
+]
+
+[project.scripts]
+biofoundry = "biofoundry.cli:main"
+
+[project.urls]
+Repository = "https://github.com/lamm-mit/SwarmWorld"
+Data = "https://huggingface.co/datasets/lamm-mit/swarmworld-data"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "game/tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

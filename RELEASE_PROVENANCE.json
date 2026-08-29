@@ -1,0 +1,32 @@
+{
+  "release_name": "SwarmWorld source release",
+  "release_version": "0.1.0",
+  "assembled_on": "2026-08-29",
+  "source_repository": "https://github.com/lamm-mit/SwarmWorld",
+  "source_branch": "main",
+  "source_commit": "504b7186260b5173c6c63d5c93c3e3c14ac86321",
+  "source_commit_date": "2026-08-29T11:53:24-04:00",
+  "authoritative_engine_revision": 9,
+  "companion_dataset": "https://huggingface.co/datasets/lamm-mit/swarmworld-data",
+  "assembly_policy": {
+    "method": "clean allowlist from the source working tree",
+    "included": [
+      "authoritative simulator and CLI",
+      "configuration profiles",
+      "core tests",
+      "browser Observatory source and tests",
+      "human-play and Godot clients",
+      "declarative worlds",
+      "curated technical and protocol documentation"
+    ],
+    "excluded": [
+      "raw and derived study data",
+      "generated run outputs",
+      "paper reports and figure pipelines",
+      "movies and rendered media",
+      "dependency directories and caches",
+      "local development metadata",
+      "source repository Git history"
+    ]
+  }
+}

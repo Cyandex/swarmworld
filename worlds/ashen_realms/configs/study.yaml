@@ -1,0 +1,23 @@
+world:
+  width: 48
+  height: 36
+  scenario_package: worlds/ashen_realms
+  disturbance_interval: 64
+  disturbance_intensity: 0.52
+population:
+  agents: 24
+  macro_interval: 8
+  communication_radius: 6
+  inventory_capacity: 14.0
+simulation:
+  seed: 1701
+  max_ticks: 256
+  snapshot_interval: 16
+science:
+  enabled: true
+  shared_depot: true
+  public_infrastructure_map: true
+evaluation:
+  enabled: false
+llm:
+  enabled: false

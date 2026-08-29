@@ -1,0 +1,15 @@
+disturbances:
+  - id: ERUPTION
+    name: Eruption of the Burning Crown
+    radius: 0.25
+    field_deltas: {temperature: 0.52, lava_depth: 0.64, ash_load: 0.56, toxic_gas: 0.30, ground_stability: -0.32}
+    terrain_transform: LAVA_CHANNEL
+    transform_threshold: 0.82
+  - id: ASHFALL
+    name: Great ashfall
+    radius: 0.38
+    field_deltas: {ash_load: 0.72, solar: -0.34, toxic_gas: 0.12, water_availability: -0.10}
+  - id: EARTHQUAKE
+    name: Deep earthquake
+    radius: 0.30
+    field_deltas: {ground_stability: -0.58, toxic_gas: 0.10}

@@ -1,0 +1,113 @@
+# Fifty-agent technology-ecology society using google/gemma-4-E4B-it through
+# a local mistral.rs Responses API server. The same profile works with
+# mistral.rs on Apple Silicon/Metal, NVIDIA CUDA, or CPU; hardware selection
+# belongs to the external server process.
+
+world:
+  width: 72
+  height: 54
+  field_diffusion: 0.05
+  resource_regrowth: 0.0015
+  disturbance_interval: 96
+  disturbance_intensity: 0.48
+  generator: procedural
+  workspace_layout: distributed
+  procedural_attempts: 32
+
+population:
+  agents: 50
+  macro_interval: 50
+  communication_radius: 5
+  inventory_capacity: 8.0
+  memory_capacity: 64
+
+simulation:
+  seed: 3001
+  max_ticks: 1200
+  snapshot_interval: 24
+  artifact_limit: 4096
+  action_attempt_budget: null
+
+evaluation:
+  enabled: true
+  suite: native_disturbance_cycle_v1
+  horizon: 288
+
+server:
+  host: 127.0.0.1
+  port: 8765
+  ticks_per_second: 8.0
+  render_every: 1
+
+llm:
+  enabled: true
+  base_url: http://127.0.0.1:8000/v1
+  # A single-model mistral.rs server advertises and accepts the alias "default".
+  model: default
+  # mistral.rs does not validate this header by default. The variable may remain
+  # unset when the endpoint is bound to 127.0.0.1.
+  api_key_env: BIOFOUNDRY_API_KEY
+  concurrency: 2
+  timeout_seconds: 600
+  temperature: 0.7
+  max_tokens: 4096
+  # Match the hosted-model flagship so model comparisons preserve action opportunity.
+  max_plan_actions: 12
+  reasoning_effort: null
+  structured_output: true
+  json_mode: false
+  experience_attention: true
+  context_budget_characters: 60000
+  nearby_artifact_detail_limit: 8
+  public_archive_retrieval_limit: 6
+  memory_retrieval_limit: 6
+  memory_record_characters: 1800
+  retrieval_feedback_weight: 0.45
+  retrieval_exploration_weight: 0.12
+  freeze_on_provider_outage: true
+  provider_retry_seconds: 5.0
+  # Tested mistral.rs/llguidance transport protections. They do not alter the
+  # canonical schema or world semantics; host validation restores real numbers.
+  grammar_safe_numbers: true
+  json_whitespace_logit_bias: -100.0
+  tokenizer: google/gemma-4-E4B-it
+  # Permit the first SwarmWorld launch to fetch tokenizer metadata. Set true only
+  # after the exact tokenizer is cached for an offline/frozen environment.
+  tokenizer_local_files_only: false
+
+science:
+  enabled: true
+  mission: technological_ecosystem_resilience
+  test_scale: 0.25
+  target_material_utility: 0.30
+  target_artifact_performance: 0.15
+  target_behavioral_novelty: 0.08
+  minimum_contributors: 2
+  feedback_history: 8
+  action_feedback: true
+  immediate_replanning: true
+  communication: true
+  social_awareness: true
+  shared_depot: true
+  public_infrastructure_map: false
+  global_landmarks: false
+  addressed_communication: true
+  program_forking: true
+  skill_library: true
+  retrieval_diagnostics: true
+  experience_reuse: true
+  request_tracking: true
+  message_interrupts: false
+  selective_replanning: true
+
+physics:
+  closed_artifact_fluxes: true
+  dismantle_recovery: true
+  dismantle_efficiency: 0.55
+
+economy:
+  enabled: false
+
+trace:
+  deduplicate_prompts: true
+  compression: gzip

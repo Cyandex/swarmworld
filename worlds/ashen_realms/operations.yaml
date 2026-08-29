@@ -1,0 +1,41 @@
+operations:
+  - slot: WASH
+    id: WASH
+    name: Wash ore
+    effects: {purity: 0.16, porosity: 0.02, quality: 0.05, oxidation: -0.03}
+  - slot: GRIND
+    id: CRUSH
+    name: Crush
+    effects: {purity: 0.06, porosity: 0.14, quality: 0.02}
+  - slot: FERMENT
+    id: ROAST
+    name: Roast
+    effects: {purity: 0.18, oxidation: 0.08, porosity: 0.05, quality: 0.04}
+  - slot: ALKALINE_TREAT
+    id: SMELT
+    name: Smelt
+    effects: {purity: 0.28, porosity: -0.18, thermal_control: 0.10, oxidation: -0.04, quality: 0.08}
+  - slot: MINERALIZE
+    id: REFINE
+    name: Refine
+    effects: {purity: 0.24, porosity: -0.08, oxidation: -0.12, quality: 0.10}
+  - slot: ALIGN
+    id: ALLOY
+    name: Alloy
+    effects: {grain_refinement: 0.12, thermal_control: 0.08, quality: 0.09}
+  - slot: WEAVE
+    id: CAST
+    name: Cast
+    effects: {porosity: -0.12, grain_refinement: 0.06, quality: 0.05}
+  - slot: PRESS
+    id: FORGE
+    name: Forge
+    effects: {porosity: -0.16, work_hardening: 0.28, grain_refinement: 0.08, quality: 0.08}
+  - slot: DRY
+    id: QUENCH
+    name: Quench
+    effects: {work_hardening: 0.16, thermal_control: 0.24, oxidation: -0.05, quality: 0.04}
+  - slot: COAT
+    id: ANNEAL
+    name: Anneal
+    effects: {work_hardening: -0.08, grain_refinement: 0.25, thermal_control: 0.14, quality: 0.09}

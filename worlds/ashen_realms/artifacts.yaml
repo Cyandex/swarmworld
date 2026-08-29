@@ -1,0 +1,19 @@
+artifact_type:
+  slot: MATERIAL_SYSTEM
+  id: FORGED_SYSTEM
+  name: Forged system
+geometry_names:
+  layers: assembled_parts
+  surface_area: exposed_area
+  channel_density: cooling_channel_density
+  anisotropy: directional_reinforcement
+  branching: load_path_branching
+  connectivity: joint_connectivity
+  curvature: shell_curvature
+  modularity: replaceable_modularity
+examples:
+  - heat-resistant gate plate
+  - lava-diversion barrier
+  - modular stone-and-metal bridge
+  - mine-support frame
+  - ash-filtration housing

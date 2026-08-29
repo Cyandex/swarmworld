@@ -1,0 +1,97 @@
+# Prompted human play inside a live 12-agent LLM society (OPENAI_API_KEY).
+# Each decision window waits up to 4 seconds for the player, then the world
+# continues. Engine sections copied from configs/openai-gpt-5.6-luna.yaml
+# (unmodified source file); ticks_per_second lowered for interactive pacing.
+
+game:
+  human_agent: agent_000000
+  decision_interval: 1
+  input_timeout_seconds: 4
+  require_response: false
+  queue_limit: 4
+
+world:
+  width: 48
+  height: 36
+  field_diffusion: 0.06
+  resource_regrowth: 0.002
+  disturbance_interval: 96
+  disturbance_intensity: 0.45
+  generator: fixed
+
+population:
+  agents: 12
+  macro_interval: 16
+  communication_radius: 6
+  inventory_capacity: 12.0
+  memory_capacity: 64
+
+simulation:
+  seed: 17
+  max_ticks: 2000
+  snapshot_interval: 32
+  artifact_limit: 4096
+
+server:
+  host: 127.0.0.1
+  port: 8765
+  ticks_per_second: 2.0
+  render_every: 1
+
+llm:
+  enabled: true
+  base_url: https://api.openai.com/v1
+  model: gpt-5.6-luna
+  api_key_env: OPENAI_API_KEY
+  concurrency: 4
+  timeout_seconds: 180
+  max_tokens: 4096
+  reasoning_effort: low
+  structured_output: true
+  experience_attention: true
+  context_budget_characters: 60000
+  nearby_artifact_detail_limit: 6
+  public_archive_retrieval_limit: 4
+  memory_retrieval_limit: 4
+  memory_record_characters: 1800
+  retrieval_feedback_weight: 0.45
+  retrieval_exploration_weight: 0.12
+  freeze_on_provider_outage: true
+  provider_retry_seconds: 5.0
+
+science:
+  enabled: true
+  mission: open_habitat_resilience
+  test_scale: 0.25
+  target_material_utility: 0.30
+  target_artifact_performance: 0.15
+  target_behavioral_novelty: 0.08
+  minimum_contributors: 2
+  feedback_history: 8
+  action_feedback: true
+  immediate_replanning: true
+  communication: true
+  social_awareness: true
+  shared_depot: true
+  public_infrastructure_map: true
+  global_landmarks: false
+  addressed_communication: true
+  program_forking: true
+  skill_library: true
+  retrieval_diagnostics: true
+  experience_reuse: true
+  request_tracking: true
+  message_interrupts: false
+  selective_replanning: true
+
+physics:
+  closed_artifact_fluxes: true
+  dismantle_recovery: true
+  dismantle_efficiency: 0.55
+
+economy:
+  enabled: false
+
+trace:
+  deduplicate_prompts: true
+  compression: gzip

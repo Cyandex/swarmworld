@@ -1,0 +1,13 @@
+services:
+  - {slot: water_capture, id: HEAT_SHIELDING, name: Heat shielding}
+  - {slot: remediation, id: LAVA_DIVERSION, name: Lava diversion}
+  - {slot: structural_support, id: STRUCTURAL_SUPPORT, name: Structural support}
+  - {slot: adaptive_regulation, id: THERMAL_REGULATION, name: Thermal regulation}
+  - {slot: self_maintenance, id: FIELD_REPAIR, name: Field repair}
+  - {slot: ecological_support, id: MINE_SAFETY, name: Mine safety}
+field_overlays:
+  - {field: temperature, color: "#ff3d00"}
+  - {field: lava_depth, color: "#ff8f00"}
+  - {field: ash_load, color: "#777477"}
+  - {field: toxic_gas, color: "#c8bc35"}
+  - {field: ground_stability, color: "#70a37f"}

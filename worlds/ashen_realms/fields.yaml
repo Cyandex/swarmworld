@@ -1,0 +1,82 @@
+fields:
+  - id: elevation
+    name: Elevation
+    range: [0.0, 1.0]
+    diffusion: 0.0
+    initial:
+      constant: 0.14
+      gradient_y: -0.04
+      noise: 0.015
+      radial:
+        - {center: [0.53, 0.43], sigma: 0.18, amplitude: 0.70}
+      terrain_offsets: {IRON_MOUNTAINS: 0.24, ANCIENT_ROAD: -0.03}
+  - id: temperature
+    name: Temperature
+    range: [0.0, 1.0]
+    diffusion: 0.045
+    decay: 0.001
+    sources: {MAGMA_SEA: 0.025, LAVA_CHANNEL: 0.014, GREAT_FORGE: 0.004}
+    initial:
+      constant: 0.22
+      noise: 0.018
+      radial:
+        - {center: [0.53, 0.43], sigma: 0.18, amplitude: 0.70}
+  - id: lava_depth
+    name: Lava depth
+    range: [0.0, 1.0]
+    diffusion: 0.025
+    decay: 0.0015
+    sources: {MAGMA_SEA: 0.018, LAVA_CHANNEL: 0.008}
+    initial:
+      constant: 0.0
+      terrain_offsets: {MAGMA_SEA: 0.95, LAVA_CHANNEL: 0.64}
+  - id: ash_load
+    name: Ash load
+    range: [0.0, 1.0]
+    diffusion: 0.032
+    decay: 0.001
+    sources: {MAGMA_SEA: 0.004}
+    initial:
+      constant: 0.20
+      noise: 0.03
+      radial:
+        - {center: [0.53, 0.43], sigma: 0.28, amplitude: 0.42}
+  - id: ground_stability
+    name: Ground stability
+    range: [0.0, 1.0]
+    diffusion: 0.012
+    decay: 0.0
+    initial:
+      constant: 0.72
+      noise: 0.025
+      terrain_offsets: {MAGMA_SEA: -0.62, LAVA_CHANNEL: -0.48, IRON_MOUNTAINS: 0.12, ANCIENT_ROAD: 0.15}
+  - id: toxic_gas
+    name: Toxic gas
+    range: [0.0, 1.0]
+    diffusion: 0.055
+    decay: 0.006
+    sources: {SULFUR_MARSH: 0.012, MAGMA_SEA: 0.006}
+    initial:
+      constant: 0.015
+      noise: 0.008
+      terrain_offsets: {SULFUR_MARSH: 0.48, MAGMA_SEA: 0.20}
+  - id: water_availability
+    name: Water availability
+    range: [0.0, 1.0]
+    diffusion: 0.025
+    decay: 0.0005
+    initial:
+      constant: 0.18
+      gradient_x: -0.04
+      noise: 0.015
+      terrain_offsets: {SULFUR_MARSH: 0.24, MAGMA_SEA: -0.16, LAVA_CHANNEL: -0.14}
+  - id: solar
+    name: Solar exposure
+    range: [0.0, 1.0]
+    diffusion: 0.0
+    decay: 0.0
+    day_cycle: true
+    period: 256
+    night: 0.18
+    amplitude: 0.72
+    initial: {constant: 0.65}

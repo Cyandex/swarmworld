@@ -1,0 +1,31 @@
+world:
+  width: 32
+  height: 24
+  scenario_package: worlds/ashen_realms
+  disturbance_interval: 48
+  disturbance_intensity: 0.48
+  resource_regrowth: 0.0
+population:
+  agents: 24
+  macro_interval: 8
+  communication_radius: 6
+  inventory_capacity: 12.0
+simulation:
+  seed: 1701
+  max_ticks: 100
+  snapshot_interval: 10
+  artifact_limit: 256
+science:
+  enabled: true
+  shared_depot: true
+  public_infrastructure_map: true
+  global_landmarks: false
+evaluation:
+  enabled: false
+server:
+  host: 127.0.0.1
+  port: 8765
+  ticks_per_second: 8.0
+  render_every: 1
+llm:
+  enabled: false

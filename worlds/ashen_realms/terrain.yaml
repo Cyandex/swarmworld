@@ -1,0 +1,10 @@
+terrains:
+  - {slot: DEEP_WATER, id: MAGMA_SEA, name: Magma sea, walkable: false, color: "#ff3d00", height: -0.12}
+  - {slot: TIDAL, id: LAVA_CHANNEL, name: Lava channel, walkable: false, color: "#ff6d00", height: -0.06}
+  - {slot: MEADOW, id: ASH_PLAIN, name: Ash plain, walkable: true, color: "#514b49", height: 0.02}
+  - {slot: FUNGAL_GROVE, id: OBSIDIAN_WASTE, name: Obsidian waste, walkable: true, color: "#17151c", height: 0.10}
+  - {slot: CHITIN_GARDEN, id: SULFUR_MARSH, name: Sulfur marsh, walkable: true, color: "#9b8f2f", height: 0.00}
+  - {slot: CELLULOSE_FIELD, id: ANCIENT_ROAD, name: Ancient road, walkable: true, color: "#8d7961", height: 0.04}
+  - {slot: MINERAL_SPRING, id: IRON_MOUNTAINS, name: Iron mountains, walkable: true, color: "#70645e", height: 0.36}
+  - {slot: FOUNDRY, id: GREAT_FORGE, name: Great forge enclave, walkable: true, color: "#9a3e23", height: 0.14, operations: [WASH, CRUSH, ROAST, SMELT, REFINE, ALLOY, CAST, FORGE, QUENCH, ANNEAL]}
+  - {slot: TEST_FIELD, id: PROVING_GROUND, name: Proving ground, walkable: true, color: "#80736a", height: 0.08}

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SwarmWorld — Human Play</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="layout">
+    <div id="stage">
+      <canvas id="world"></canvas>
+      <div id="topbar">
+        <span id="conn-dot" class="dot"></span>
+        <span id="status-tick">tick —</span>
+        <span id="status-mode" class="badge">—</span>
+        <span id="status-speed"></span>
+        <span id="status-model"></span>
+        <span id="banner"></span>
+      </div>
+      <div id="decision" class="hidden">
+        <div id="decision-label">Your move</div>
+        <div id="decision-track"><div id="decision-fill"></div></div>
+      </div>
+      <div id="helpbar">
+        WASD/arrows move · E inspect · H harvest · G deposit · T test ·
+        Space wait · C chat · P pause · N step · -/+ speed · F fields ·
+        M follow · wheel zoom · drag pan
+      </div>
+      <div id="toasts"></div>
+    </div>
+    <div id="panel">
+      <h1>SwarmWorld <span class="sub">human play</span></h1>
+      <div class="card" id="join-card">
+        <button id="join-btn">Join as —</button>
+        <div id="join-info" class="muted"></div>
+      </div>
+      <div class="card" id="player-card">
+        <div class="card-title">You</div>
+        <div class="row"><span>Energy</span>
+          <div class="bar"><div id="energy-fill"></div></div>
+        </div>
+        <div id="tile-info" class="kv"></div>
+        <div class="card-title small">Inventory</div>
+        <div id="inventory" class="kv"></div>
+      </div>
+      <div class="card" id="actions-card">
+        <div class="card-title">Actions <span id="affordance-note" class="muted"></span></div>
+        <div id="dpad">
+          <button data-dir="NORTH">↑</button>
+          <button data-dir="WEST">←</button>
+          <button data-act="WAIT">·</button>
+          <button data-dir="EAST">→</button>
+          <button data-dir="SOUTH">↓</button>
+        </div>
+        <div id="verbs">
+          <button data-act="INSPECT">Inspect (E)</button>
+          <button data-act="HARVEST">Harvest (H)</button>
+          <button data-act="DEPOSIT">Deposit (G)</button>
+          <button data-act="TEST">Test (T)</button>
+        </div>
+      </div>
+      <div class="card" id="chat-card">
+        <div class="card-title">Society channel</div>
+        <div id="chat-log"></div>
+        <form id="chat-form">
+          <input id="chat-input" type="text" maxlength="500"
+                 placeholder="say something to nearby agents…" autocomplete="off" />
+        </form>
+      </div>
+      <div class="card" id="events-card">
+        <div class="card-title">Nearby activity</div>
+        <div id="events-log"></div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

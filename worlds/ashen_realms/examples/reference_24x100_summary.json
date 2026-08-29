@@ -1,0 +1,61 @@
+{
+  "verification_date": "2026-08-20",
+  "scenario": {
+    "id": "ashen_realms",
+    "version": "1.0.0",
+    "package_hash": "68b280eb0a59b1322692e48513c2693c866b94b83e79c743ac25cdd5da588cef"
+  },
+  "configuration": {
+    "agents": 24,
+    "ticks": 100,
+    "seed": 1701,
+    "policy": "scripted"
+  },
+  "execution": {
+    "action_outcomes": 2400,
+    "rejections": 0,
+    "rejection_rate": 0.0,
+    "actions": {
+      "BUILD": 6,
+      "HARVEST": 147,
+      "INSPECT": 34,
+      "MOVE": 2171,
+      "OPERATE": 21,
+      "TEST": 21
+    }
+  },
+  "scenario_results": {
+    "resource_extraction_mass": {
+      "CARBON_FUEL": 10.796587,
+      "IRON_ORE": 25.181141,
+      "LIMESTONE_FLUX": 7.149538
+    },
+    "microbatches_fabricated": 21,
+    "batches_tested": 21,
+    "test_completion_fraction": 1.0,
+    "test_pass_fraction": 1.0,
+    "mean_material_utility": 0.353531,
+    "process_mass_yield_fraction": 0.844092,
+    "facility_utilization": {
+      "GREAT_FORGE": 21
+    },
+    "artifacts_built": 6,
+    "disturbances": {
+      "ERUPTION": 1,
+      "ASHFALL": 1
+    },
+    "affected_cell_events": 441
+  },
+  "replay": {
+    "action_trace_replayed": true,
+    "snapshots_verified": 12,
+    "final_digest": "c568eb9a47aef76cf51b9cdf37c3baf516e3213f5420d3c523159477be06edf3"
+  },
+  "regression_checks": {
+    "python_tests_passed": 170,
+    "web_tests_passed": 27,
+    "web_production_build": "passed",
+    "godot_project_parse": "passed",
+    "ruff": "passed"
+  }
+}

@@ -1,0 +1,105 @@
+# Strong intervention condition: structurally variable world plus resource-limited
+# generational turnover. Compare against openai-gpt-5.6-luna.yaml at paired seeds;
+# do not mix this treatment into the primary fixed-world baseline.
+world:
+  width: 48
+  height: 36
+  field_diffusion: 0.06
+  resource_regrowth: 0.002
+  disturbance_interval: 96
+  disturbance_intensity: 0.45
+  generator: procedural
+  procedural_attempts: 32
+  moisture_capacity: 1.0
+  nutrient_capacity: 1.0
+
+population:
+  agents: 12
+  macro_interval: 16
+  communication_radius: 6
+  inventory_capacity: 12.0
+  memory_capacity: 64
+
+simulation:
+  seed: 17
+  max_ticks: 2000
+  snapshot_interval: 32
+  artifact_limit: 4096
+
+server:
+  host: 127.0.0.1
+  port: 8765
+  ticks_per_second: 8.0
+  render_every: 1
+
+llm:
+  enabled: true
+  base_url: https://api.openai.com/v1
+  model: gpt-5.6-luna
+  api_key_env: OPENAI_API_KEY
+  concurrency: 4
+  timeout_seconds: 180
+  max_tokens: 4096
+  reasoning_effort: low
+  structured_output: true
+  experience_attention: true
+  context_budget_characters: 60000
+  nearby_artifact_detail_limit: 6
+  public_archive_retrieval_limit: 4
+  memory_retrieval_limit: 4
+  memory_record_characters: 1800
+  retrieval_feedback_weight: 0.45
+  retrieval_exploration_weight: 0.12
+  freeze_on_provider_outage: true
+  provider_retry_seconds: 5.0
+
+science:
+  enabled: true
+  mission: open_habitat_resilience
+  test_scale: 0.25
+  target_material_utility: 0.30
+  target_artifact_performance: 0.15
+  target_behavioral_novelty: 0.08
+  minimum_contributors: 2
+  feedback_history: 8
+  action_feedback: true
+  immediate_replanning: true
+  communication: true
+  social_awareness: true
+  shared_depot: true
+  public_infrastructure_map: true
+  global_landmarks: false
+  addressed_communication: true
+  program_forking: true
+  skill_library: true
+  retrieval_diagnostics: true
+  experience_reuse: true
+  request_tracking: true
+  message_interrupts: false
+  selective_replanning: true
+
+physics:
+  closed_artifact_fluxes: true
+  dismantle_recovery: true
+  dismantle_efficiency: 0.55
+
+economy:
+  enabled: true
+  mortality_enabled: true
+  respawn_enabled: true
+  cultural_inheritance: true
+  initial_energy: 1.0
+  maximum_energy: 1.0
+  passive_cost: 0.0002
+  default_action_cost: 0.001
+  move_cost: 0.002
+  build_cost: 0.012
+  operate_cost: 0.008
+  communication_cost: 0.0015
+  metabolize_efficiency: 0.65
+  respawn_delay: 32
+  inherited_skill_limit: 4
+
+trace:
+  deduplicate_prompts: true
+  compression: gzip

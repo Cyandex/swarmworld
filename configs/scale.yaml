@@ -1,0 +1,37 @@
+world:
+  width: 128
+  height: 96
+  field_diffusion: 0.06
+  resource_regrowth: 0.002
+
+population:
+  agents: 1024
+  macro_interval: 64
+  communication_radius: 4
+  inventory_capacity: 12.0
+  memory_capacity: 16
+
+simulation:
+  seed: 23
+  max_ticks: 1000
+  snapshot_interval: 128
+  artifact_limit: 65536
+
+server:
+  host: 127.0.0.1
+  port: 8765
+  ticks_per_second: 30.0
+  render_every: 8
+
+llm:
+  enabled: false
+  base_url: http://127.0.0.1:8000/v1
+  model: google/gemma-4-E2B-it
+  api_key_env: BIOFOUNDRY_API_KEY
+  concurrency: 16
+  timeout_seconds: 120
+  temperature: 0.7
+  max_tokens: 384
+
+science:
+  enabled: false

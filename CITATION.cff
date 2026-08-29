@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use SwarmWorld, please cite this software and the companion dataset."
+title: "SwarmWorld"
+type: software
+version: 0.1.0
+date-released: 2026-08-29
+authors:
+  - name: "SwarmWorld contributors"
+repository-code: "https://github.com/lamm-mit/SwarmWorld"
+url: "https://github.com/lamm-mit/SwarmWorld"
+license: Apache-2.0
+keywords:
+  - multi-agent systems
+  - language-model agents
+  - collective intelligence
+  - agent-based modeling
+  - artificial societies
+  - scientific discovery

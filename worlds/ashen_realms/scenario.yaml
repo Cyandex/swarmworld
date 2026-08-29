@@ -1,0 +1,20 @@
+format_version: 1
+id: ashen_realms
+name: Ashen Realms
+version: 1.0.0
+description: >-
+  An original epic-fantasy volcanic world of ash plains, deep mines, ancient roads,
+  mountain strongholds, and experimental metallurgy.
+agent_prompt: prompts/agent_instructions.md
+documents:
+  terrains: terrain.yaml
+  geometry: geometry.yaml
+  fields: fields.yaml
+  resources: resources.yaml
+  operations: operations.yaml
+  facilities: facilities.yaml
+  artifacts: artifacts.yaml
+  missions: missions.yaml
+  disturbances: disturbances.yaml
+  rendering: rendering.yaml
+  analysis: analysis.yaml

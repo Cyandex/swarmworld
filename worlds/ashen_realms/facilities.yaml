@@ -1,0 +1,15 @@
+facilities:
+  - {slot: NONE, id: NONE, name: None, color: "#000000"}
+  - {slot: FERMENTER, id: ROASTING_HEARTH, name: Roasting hearth, color: "#b94b22", operations: [ROAST]}
+  - {slot: WASHER, id: ORE_WASHER, name: Ore washer, color: "#4b91aa", operations: [WASH, CRUSH]}
+  - {slot: PRESS, id: FORGE, name: Forge, color: "#da6b2d", operations: [CAST, FORGE, QUENCH, ANNEAL]}
+  - {slot: ALIGNER, id: FURNACE, name: Furnace, color: "#f04b24", operations: [SMELT, REFINE, ALLOY]}
+  - {slot: TESTER, id: ASSAY_HALL, name: Assay hall, color: "#a68d69", operations: []}
+  - {slot: ARCHIVE, id: LORE_ARCHIVE, name: Lore archive, color: "#826aa5", operations: []}
+placements:
+  - {facility: ORE_WASHER, position: [0.43, 0.57]}
+  - {facility: ROASTING_HEARTH, position: [0.48, 0.57]}
+  - {facility: FURNACE, position: [0.53, 0.57]}
+  - {facility: FORGE, position: [0.43, 0.63]}
+  - {facility: ASSAY_HALL, position: [0.53, 0.63]}
+  - {facility: LORE_ARCHIVE, position: [0.58, 0.63]}

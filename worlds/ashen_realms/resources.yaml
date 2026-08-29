@@ -1,0 +1,52 @@
+resources:
+  - {slot: NONE, id: NONE, name: None, color: "#000000", composition: [0, 0, 0, 0, 0, 0]}
+  - {slot: KELP, id: BASALT, name: Basalt, color: "#3d3b40", composition: [0.03, 0.01, 0.00, 0.90, 0.04, 0.02]}
+  - {slot: SHELL, id: OBSIDIAN, name: Obsidian, color: "#21172b", composition: [0.01, 0.00, 0.00, 0.95, 0.02, 0.02]}
+  - {slot: FUNGUS, id: IRON_ORE, name: Iron ore, color: "#9a4934", composition: [0.68, 0.01, 0.02, 0.18, 0.04, 0.07]}
+  - {slot: CHITIN, id: COPPER_ORE, name: Copper ore, color: "#4f8b73", composition: [0.03, 0.65, 0.01, 0.20, 0.04, 0.07]}
+  - {slot: CELLULOSE, id: SULFUR, name: Sulfur, color: "#d0b92f", composition: [0.00, 0.00, 0.00, 0.18, 0.06, 0.76]}
+  - {slot: MINERAL, id: LIMESTONE_FLUX, name: Limestone flux, color: "#d3c8a7", composition: [0.00, 0.00, 0.00, 0.30, 0.65, 0.05]}
+  - {slot: WATER, id: WATER, name: Water, color: "#4f9ab8", composition: [0.00, 0.00, 0.00, 0.00, 0.00, 1.00]}
+  - {slot: CATALYST, id: CARBON_FUEL, name: Carbon fuel, color: "#292621", composition: [0.01, 0.00, 0.82, 0.05, 0.02, 0.10]}
+deposits:
+  - resource: BASALT
+    shape: {kind: noise, probability: 0.11}
+    capacity: 2.8
+    capacity_variation: 0.20
+    initial_fill: [0.70, 1.0]
+  - resource: OBSIDIAN
+    shape: {kind: ring, center: [0.53, 0.43], inner: 0.10, outer: 0.23}
+    capacity: 3.2
+    capacity_variation: 0.15
+    initial_fill: [0.65, 1.0]
+  - resource: IRON_ORE
+    shape: {kind: ellipse, center: [0.28, 0.20], radius: [0.23, 0.14]}
+    capacity: 4.4
+    capacity_variation: 0.22
+    initial_fill: [0.60, 1.0]
+  - resource: COPPER_ORE
+    shape: {kind: ellipse, center: [0.82, 0.30], radius: [0.11, 0.23]}
+    capacity: 3.5
+    capacity_variation: 0.25
+    initial_fill: [0.55, 0.95]
+  - resource: SULFUR
+    shape: {kind: ellipse, center: [0.20, 0.76], radius: [0.16, 0.12]}
+    capacity: 3.0
+    capacity_variation: 0.20
+    initial_fill: [0.65, 1.0]
+  - resource: LIMESTONE_FLUX
+    shape: {kind: ellipse, center: [0.13, 0.44], radius: [0.10, 0.17]}
+    capacity: 3.6
+    capacity_variation: 0.18
+    initial_fill: [0.70, 1.0]
+  - resource: WATER
+    shape: {kind: ellipse, center: [0.10, 0.84], radius: [0.07, 0.08]}
+    capacity: 4.0
+    capacity_variation: 0.10
+    initial_fill: [0.75, 1.0]
+    regrowth: 0.0015
+  - resource: CARBON_FUEL
+    shape: {kind: ellipse, center: [0.84, 0.82], radius: [0.12, 0.09]}
+    capacity: 3.8
+    capacity_variation: 0.20
+    initial_fill: [0.65, 1.0]

@@ -1,0 +1,18 @@
+# Copy the entire worlds/ashen_realms directory before editing. This excerpt shows the
+# required identity and document routing; the package validator checks every reference.
+format_version: 1
+id: my_world
+name: My World
+version: 0.1.0
+documents:
+  terrains: terrain.yaml
+  geometry: geometry.yaml
+  fields: fields.yaml
+  resources: resources.yaml
+  operations: operations.yaml
+  facilities: facilities.yaml
+  artifacts: artifacts.yaml
+  missions: missions.yaml
+  disturbances: disturbances.yaml
+  rendering: rendering.yaml
+  analysis: analysis.yaml

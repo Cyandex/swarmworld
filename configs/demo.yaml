@@ -1,0 +1,76 @@
+world:
+  width: 48
+  height: 36
+  field_diffusion: 0.06
+  resource_regrowth: 0.002
+  disturbance_interval: 96
+  disturbance_intensity: 0.45
+  generator: fixed
+
+population:
+  agents: 12
+  macro_interval: 16
+  communication_radius: 6
+  inventory_capacity: 12.0
+  memory_capacity: 64
+
+simulation:
+  seed: 17
+  max_ticks: 2000
+  snapshot_interval: 32
+  artifact_limit: 4096
+
+server:
+  host: 127.0.0.1
+  port: 8765
+  ticks_per_second: 8.0
+  render_every: 1
+
+llm:
+  enabled: false
+  base_url: http://127.0.0.1:8000/v1
+  model: google/gemma-4-E2B-it
+  api_key_env: BIOFOUNDRY_API_KEY
+  concurrency: 4
+  timeout_seconds: 120
+  temperature: 0.7
+  max_tokens: 512
+  experience_attention: true
+  freeze_on_provider_outage: true
+
+science:
+  enabled: true
+  mission: open_habitat_resilience
+  test_scale: 0.25
+  target_material_utility: 0.30
+  target_artifact_performance: 0.15
+  target_behavioral_novelty: 0.08
+  minimum_contributors: 2
+  feedback_history: 8
+  action_feedback: true
+  immediate_replanning: true
+  communication: true
+  social_awareness: true
+  shared_depot: true
+  public_infrastructure_map: true
+  global_landmarks: false
+  addressed_communication: true
+  program_forking: true
+  skill_library: true
+  retrieval_diagnostics: true
+  experience_reuse: true
+  request_tracking: true
+  message_interrupts: false
+  selective_replanning: true
+
+physics:
+  closed_artifact_fluxes: true
+  dismantle_recovery: true
+  dismantle_efficiency: 0.55
+
+economy:
+  enabled: false
+
+trace:
+  deduplicate_prompts: true
+  compression: none

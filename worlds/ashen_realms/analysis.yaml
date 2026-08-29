@@ -1,0 +1,20 @@
+composition_names: [iron_fraction, copper_fraction, carbon_fraction, silicate_fraction, flux_fraction, volatile_fraction]
+property_names:
+  stiffness: strength
+  toughness: fracture_toughness
+  permeability: heat_resistance
+  adhesion: corrosion_resistance
+  healing: field_repairability
+  responsiveness: thermal_control
+  degradation: oxidation_risk
+  quality: process_quality
+metrics:
+  - resource_extraction_by_type
+  - remaining_deposit_mass_by_type
+  - microbatches_fabricated
+  - batches_tested
+  - process_yield
+  - disturbance_exposure
+  - field_means_over_time
+  - facility_utilization
+  - agent_coverage

@@ -1,0 +1,22 @@
+title: Forge Against the Burning Crown
+objective: >-
+  Survey the volcanic realm, ground claims in observed resources, refine ore through
+  measured processing, and develop infrastructure that remains useful through eruptions.
+milestones:
+  - Survey at least three terrain regions and identify a workable ore deposit.
+  - Gather iron ore, carbon fuel, and limestone flux through direct observation.
+  - Produce and test a reduced-scale iron microbatch.
+  - Compare at least two processing histories.
+  - Build and document an original heat- or load-resistant system.
+default_recipe:
+  inputs:
+    - {resource: IRON_ORE, mass: 0.8}
+    - {resource: CARBON_FUEL, mass: 0.3}
+    - {resource: LIMESTONE_FLUX, mass: 0.2}
+  steps:
+    - {operation: CRUSH, intensity: 0.65}
+    - {operation: ROAST, intensity: 0.58}
+    - {operation: SMELT, intensity: 0.82}
+    - {operation: FORGE, intensity: 0.70}
+  output_form: forged_iron_coupon
+  design_principles: [impurity control, controlled thermal history, densification]
