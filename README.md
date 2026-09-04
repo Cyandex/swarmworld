@@ -212,8 +212,22 @@ and ticks within one society are nested observations.
 
 ## Citation and license
 
-Citation metadata is provided in [CITATION.cff](CITATION.cff). Until the associated
-paper citation is finalized, cite the software release and the separate dataset.
+If you use SwarmWorld, please cite:
+
+```bibtex
+@misc{pal2026swarmworldstigmergictechnologicalevolution,
+  title         = {SwarmWorld: Stigmergic technological evolution in societies of language-model agents},
+  author        = {Subhadeep Pal and Fiona Y. Wang and Markus J. Buehler},
+  year          = {2026},
+  eprint        = {2608.26081},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2608.26081}
+}
+```
+
+Machine-readable citation metadata is provided in [CITATION.cff](CITATION.cff).
+Please cite the separate dataset as well when using the released traces or analyses.
 
 SwarmWorld source code is released under the
 [Apache License 2.0](LICENSE). Third-party model weights and hosted APIs are governed
