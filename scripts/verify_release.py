@@ -10,11 +10,11 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "RELEASE_MANIFEST.sha256"
 
 ALLOWED_TOP_LEVEL = {
+    ".agents",
     ".git",
     ".gitignore",
     "CITATION.cff",
@@ -40,6 +40,17 @@ ALLOWED_TOP_LEVEL = {
     "worlds",
 }
 
+ALLOWED_AGENT_ENTRIES = {
+    ".agents/skills",
+    ".agents/skills/swarmworld-world-builder",
+    ".agents/skills/swarmworld-world-builder/SKILL.md",
+    ".agents/skills/swarmworld-world-builder/agents",
+    ".agents/skills/swarmworld-world-builder/agents/openai.yaml",
+    ".agents/skills/swarmworld-world-builder/references",
+    ".agents/skills/swarmworld-world-builder/references/format-v1-contract.md",
+    ".agents/skills/swarmworld-world-builder/references/verification-workflow.md",
+}
+
 REQUIRED = {
     "README.md",
     "LICENSE",
@@ -58,10 +69,10 @@ REQUIRED = {
     "web/package-lock.json",
     "worlds/ashen_realms",
     "runs/.gitkeep",
+    ".agents/skills/swarmworld-world-builder/SKILL.md",
 }
 
 FORBIDDEN_TOP_LEVEL = {
-    ".agents",
     ".claude",
     "data_share",
     "journal_figures",
@@ -156,9 +167,19 @@ def check_structure(errors: list[str]) -> None:
         if not (ROOT / name).exists():
             errors.append(f"missing required path: {name}")
 
+    agents_root = ROOT / ".agents"
+    if agents_root.exists():
+        agent_entries = {relative(path) for path in agents_root.rglob("*")}
+        for name in sorted(agent_entries - ALLOWED_AGENT_ENTRIES):
+            errors.append(f"unexpected agent metadata: {name}")
+        for name in sorted(ALLOWED_AGENT_ENTRIES - agent_entries):
+            errors.append(f"missing approved agent-skill entry: {name}")
+
     for path in ROOT.rglob("*"):
         if ".git" in path.relative_to(ROOT).parts:
             continue
+        if path.is_symlink():
+            errors.append(f"symbolic link not allowed in release: {relative(path)}")
         if path.is_dir() and (path.name in FORBIDDEN_DIR_NAMES or path.name.endswith(".egg-info")):
             errors.append(f"forbidden generated directory: {relative(path)}")
         if path.is_file():

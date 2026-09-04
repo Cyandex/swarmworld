@@ -1,7 +1,7 @@
 {
   "release_name": "SwarmWorld source release",
   "release_version": "0.1.0",
-  "assembled_on": "2026-08-29",
+  "assembled_on": "2026-09-04",
   "source_repository": "https://github.com/lamm-mit/SwarmWorld",
   "source_branch": "main",
   "source_commit": "504b7186260b5173c6c63d5c93c3e3c14ac86321",
@@ -17,6 +17,7 @@
       "browser Observatory source and tests",
       "human-play and Godot clients",
       "declarative worlds",
+      "curated SwarmWorld world-builder agent skill",
       "curated technical and protocol documentation"
     ],
     "excluded": [
@@ -25,7 +26,7 @@
       "paper reports and figure pipelines",
       "movies and rendered media",
       "dependency directories and caches",
-      "local development metadata",
+      "other local development metadata",
       "source repository Git history"
     ]
   }

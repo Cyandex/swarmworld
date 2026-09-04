@@ -28,6 +28,7 @@ named SwarmWorld.
   ecological evaluation;
 - Three.js Observatory, optional Godot client, and human-in-the-swarm client;
 - declarative scenario packages, including the Ashen Realms example;
+- a repository-local agent skill for authoring and validating new scenario packages;
 - core Python and browser tests.
 
 Generated study data, journal-figure pipelines, reports, movies, caches, and local
@@ -169,6 +170,19 @@ The biological world is the default. An entirely different declarative world can
 selected through `world.scenario_package`; the complete example is
 [worlds/ashen_realms](worlds/ashen_realms/README.md).
 
+## Build a new world with an agent
+
+The repository includes the
+[`swarmworld-world-builder`](.agents/skills/swarmworld-world-builder/SKILL.md) skill for
+coding agents that support repository-local skills. It instructs an agent to create,
+revise, review, or debug a declarative 2-D scenario package while preserving the
+biological default and the scenario format-v1 contract.
+
+Ask the agent to use `swarmworld-world-builder` when creating a world under `worlds/`.
+The skill uses Ashen Realms as a structural example, defines the required package
+components, and requires validation, deterministic smoke testing, replay, and
+world-specific documentation before handoff.
+
 ## Validate the source release
 
 ```bash
@@ -191,6 +205,7 @@ machine-specific absolute paths.
 ## Repository layout
 
 ```text
+.agents/skills/        repository-local agent workflows
 src/biofoundry/       authoritative simulator, policies, replay, analysis, and CLI
 configs/              validated run profiles
 tests/                core Python regression tests
