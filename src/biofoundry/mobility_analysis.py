@@ -178,6 +178,17 @@ POPULATION_COLORS = {
 }
 
 
+def _population_color_map(populations: Iterable[int]) -> dict[int, str]:
+    """Return stable paper colors plus deterministic fallbacks for other sizes."""
+
+    ordered = sorted({int(population) for population in populations})
+    fallback = ("#13795b", "#d8664b", "#526b75", "#b06c49", "#6f88a8", "#7a6f9b")
+    return {
+        population: POPULATION_COLORS.get(population, fallback[index % len(fallback)])
+        for index, population in enumerate(ordered)
+    }
+
+
 def _stable_rng(*parts: object) -> np.random.Generator:
     key = "\x1f".join(map(str, parts)).encode("utf-8")
     seed = int.from_bytes(hashlib.sha256(key).digest()[:8], "big")
@@ -1619,6 +1630,8 @@ def _build_regime_embedding(
                 if row["condition"] == condition
                 and int(row["population_size"]) == population
             ]
+            if not selected:
+                continue
             for field in active_fields:
                 profile_rows.append(
                     {
@@ -2961,8 +2974,11 @@ def _render_behavior_embedding(
 
     axis = axes[1, 1]
     axis.set_title("D", loc="left")
+    selected_population = max(int(row["population_size"]) for row in fraction_rows)
     selected_fractions = [
-        row for row in fraction_rows if int(row["population_size"]) == 200
+        row
+        for row in fraction_rows
+        if int(row["population_size"]) == selected_population
     ]
     x_positions = np.arange(len(SHARED_CONDITIONS), dtype=np.float64)
     bottom = np.zeros(len(SHARED_CONDITIONS), dtype=np.float64)
@@ -2988,7 +3004,7 @@ def _render_behavior_embedding(
         bottom += np.asarray(values)
     axis.set_xticks(x_positions)
     axis.set_xticklabels([LABELS[condition] for condition in SHARED_CONDITIONS])
-    axis.set_ylabel("Fraction of agents at N=200")
+    axis.set_ylabel(f"Fraction of agents at N={selected_population}")
     axis.set_ylim(0, 1)
     axis.spines[["top", "right"]].set_visible(False)
     axis.grid(axis="y", alpha=0.14)
@@ -3043,6 +3059,9 @@ def _render_behavior_scaling(
         int(row["behavior_cluster"]): str(row["behavior_descriptor"])
         for row in profile_rows
     }
+    population_ticks = sorted(
+        {int(row["population_size"]) for row in fraction_rows}
+    )
     panel_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     for axis_index, cluster in enumerate(clusters):
         axis = axes[axis_index]
@@ -3095,7 +3114,7 @@ def _render_behavior_scaling(
             loc="left",
             fontsize=9,
         )
-        axis.set_xticks([50, 100, 200])
+        axis.set_xticks(population_ticks)
         axis.set_xlabel("Agents")
         axis.set_ylabel("Fraction of agents")
         axis.set_ylim(0, 1)
@@ -3227,23 +3246,27 @@ def _render_four_condition_regime_embedding(
     y_padding = max(0.1, 0.08 * float(np.ptp(y_values)))
     explained = model_report["pca_explained_variance_ratio"]
     panel_letters = "ABCD"
+    populations = sorted({int(row["population_size"]) for row in regime_rows})
+    population_colors = _population_color_map(populations)
     for axis_index, condition in enumerate(CONDITIONS):
         axis = axes[axis_index]
         means: list[tuple[float, float]] = []
-        for population in (50, 100, 200):
+        for population in populations:
             selected = [
                 row
                 for row in regime_rows
                 if row["condition"] == condition
                 and int(row["population_size"]) == population
             ]
+            if not selected:
+                continue
             x = [float(row["regime_pc1"]) for row in selected]
             y = [float(row["regime_pc2"]) for row in selected]
             axis.scatter(
                 x,
                 y,
                 s=30,
-                color=POPULATION_COLORS[population],
+                color=population_colors[population],
                 edgecolor="white",
                 linewidth=0.5,
                 alpha=0.9,
@@ -3256,7 +3279,7 @@ def _render_four_condition_regime_embedding(
                 [mean[1]],
                 s=92,
                 marker="D",
-                color=POPULATION_COLORS[population],
+                color=population_colors[population],
                 edgecolor="#283b3b",
                 linewidth=0.8,
                 zorder=4,
@@ -3269,12 +3292,13 @@ def _render_four_condition_regime_embedding(
             alpha=0.75,
             zorder=2,
         )
-        axis.annotate(
-            "",
-            xy=means[-1],
-            xytext=means[-2],
-            arrowprops={"arrowstyle": "->", "color": "#526b75", "lw": 1.1},
-        )
+        if len(means) >= 2:
+            axis.annotate(
+                "",
+                xy=means[-1],
+                xytext=means[-2],
+                arrowprops={"arrowstyle": "->", "color": "#526b75", "lw": 1.1},
+            )
         axis.axhline(0, color="#aab6b3", linewidth=0.55, zorder=0)
         axis.axvline(0, color="#aab6b3", linewidth=0.55, zorder=0)
         axis.set_title(f"{panel_letters[axis_index]}  {LABELS[condition]}", loc="left")
@@ -3331,17 +3355,17 @@ def _render_four_condition_regime_embedding(
             marker="D",
             linestyle="",
             markersize=6,
-            markerfacecolor=POPULATION_COLORS[population],
+            markerfacecolor=population_colors[population],
             markeredgecolor="#283b3b",
             label=f"N={population}",
         )
-        for population in (50, 100, 200)
+        for population in populations
     ]
     figure.legend(
         handles=handles,
         loc="lower center",
         bbox_to_anchor=(0.5, -0.005),
-        ncol=3,
+        ncol=max(1, len(populations)),
         frameon=False,
         fontsize=8,
     )
@@ -3368,16 +3392,18 @@ def _render_four_condition_signatures(
     all_values = np.asarray([float(row["mean_z"]) for row in profile_rows])
     bound = max(1.0, float(np.quantile(np.abs(all_values), 0.98)))
     panel_letters = "ABCD"
+    populations = sorted({int(row["population_size"]) for row in profile_rows})
+    population_index = {population: index for index, population in enumerate(populations)}
     image = None
     for axis_index, condition in enumerate(CONDITIONS):
         axis = axes[axis_index]
-        matrix = np.zeros((len(fields), 3), dtype=np.float64)
+        matrix = np.full((len(fields), len(populations)), np.nan, dtype=np.float64)
         for row in profile_rows:
             if row["condition"] != condition:
                 continue
             field_index = fields.index(str(row["feature"]))
-            population_index = (50, 100, 200).index(int(row["population_size"]))
-            matrix[field_index, population_index] = float(row["mean_z"])
+            column_index = population_index[int(row["population_size"])]
+            matrix[field_index, column_index] = float(row["mean_z"])
         image = axis.imshow(
             matrix,
             aspect="auto",
@@ -3389,6 +3415,8 @@ def _render_four_condition_signatures(
         for row_index in range(matrix.shape[0]):
             for column_index in range(matrix.shape[1]):
                 value = matrix[row_index, column_index]
+                if not math.isfinite(float(value)):
+                    continue
                 axis.text(
                     column_index,
                     row_index,
@@ -3399,8 +3427,8 @@ def _render_four_condition_signatures(
                     color="white" if abs(value) > 0.55 * bound else "#273837",
                 )
         axis.set_title(f"{panel_letters[axis_index]}  {LABELS[condition]}", loc="left")
-        axis.set_xticks(range(3))
-        axis.set_xticklabels(["N=50", "N=100", "N=200"])
+        axis.set_xticks(range(len(populations)))
+        axis.set_xticklabels([f"N={population}" for population in populations])
         axis.set_yticks(range(len(fields)))
         axis.set_yticklabels([labels[field] for field in fields])
     if image is not None:
@@ -3486,7 +3514,8 @@ def render_mobility_figures(
             behavior_model,
             destination,
         )
-    if regime_rows and regime_profiles:
+    regime_conditions = {str(row["condition"]) for row in regime_rows}
+    if regime_rows and regime_profiles and set(CONDITIONS).issubset(regime_conditions):
         figures["four_condition_regime_embedding"] = (
             _render_four_condition_regime_embedding(
                 regime_rows,

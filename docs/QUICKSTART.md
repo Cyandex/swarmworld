@@ -119,6 +119,10 @@ compute-intensive protocol. Protocol guardrails are in
 [FLAGSHIP_EXPERIMENT.md](FLAGSHIP_EXPERIMENT.md). Exact completed paper traces,
 manifests, tables, and figures are in the external dataset.
 
+For a worked analysis of this study—including verified example values, trace
+diagnostics, mobility, counterfactuals, dossiers, and the paper-data workflow—continue
+with [ANALYSIS.md](ANALYSIS.md).
+
 ## 7. Replay released paper data
 
 Download the dataset described in [DATA.md](../DATA.md), then run:

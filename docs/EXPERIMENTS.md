@@ -1,7 +1,8 @@
 # Experimental design
 
-For operational commands, start with [QUICKSTART.md](QUICKSTART.md). The current
-flagship [cultural-gain scaling protocol](FLAGSHIP_EXPERIMENT.md) compares an
+For operational commands, start with [QUICKSTART.md](QUICKSTART.md), then follow the
+worked [analysis guide](ANALYSIS.md). The current flagship
+[cultural-gain scaling protocol](FLAGSHIP_EXPERIMENT.md) compares an
 interacting swarm with the best of the same number of isolated searches, applies
 condition-honest action schemas, and evaluates frozen societies under unseen stress
 schedules. The technological-ecosystem extension is specified in

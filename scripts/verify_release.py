@@ -55,6 +55,8 @@ REQUIRED = {
     "README.md",
     "LICENSE",
     "DATA.md",
+    "docs/ANALYSIS.md",
+    "docs/assets/analysis-example-population-scaling.png",
     "CITATION.cff",
     "CONTRIBUTING.md",
     "SECURITY.md",

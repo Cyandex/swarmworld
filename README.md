@@ -138,6 +138,27 @@ This is a mechanics example, not a substitute for the preregistered paper protoc
 See [docs/FLAGSHIP_EXPERIMENT.md](docs/FLAGSHIP_EXPERIMENT.md) for experimental
 guardrails and [DATA.md](DATA.md) for the completed paper studies.
 
+## Analyze results
+
+The complete [end-to-end analysis guide](docs/ANALYSIS.md) begins with a deterministic
+no-key study, verifies and diagnoses an exact trace, runs seed-level and mobility
+analysis, shows the resulting tables and figure, and then applies the same workflow to
+the released paper dataset.
+
+| Command | Purpose |
+|---|---|
+| `biofoundry analyze-study` | endpoints, scaling, cultural gain, audits, and figures |
+| `biofoundry analyze-mobility` | movement, spatial organization, and behavioral regimes |
+| `biofoundry trace-report` | behavioral and causal diagnostics for one trace |
+| `biofoundry ecosystem-report` | frozen-society artifact knockouts and held-out assays |
+| `biofoundry counterfactual-replay` | deterministic contributor-removal interventions |
+| `biofoundry technology-dossiers` | trace-grounded catalogs and briefing sheets |
+| `biofoundry technology-atlas` | cross-study ranking, embeddings, figures, and explorer |
+
+The guide includes copy-paste commands, expected files, verified example values,
+interpretation cautions, and exact paths for the Hugging Face studies. Generated
+analysis belongs under `runs/` and remains outside the source release.
+
 ## Replay a released paper trace
 
 After downloading the external dataset, a compatible trace can be inspected without

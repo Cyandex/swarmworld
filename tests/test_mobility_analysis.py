@@ -10,6 +10,7 @@ from biofoundry.cli import build_parser
 from biofoundry.mobility_analysis import (
     _build_behavior_embedding,
     _build_regime_embedding,
+    _population_color_map,
     _render_self_organization,
     extract_spatial_trace,
     gini,
@@ -115,6 +116,16 @@ def test_extract_spatial_trace_uses_full_population_and_tracks_relocation(tmp_pa
 def test_gini_is_zero_for_equal_paths_and_positive_for_unequal_paths():
     assert gini([2, 2, 2]) == 0.0
     assert gini([0, 0, 3]) == pytest.approx(2 / 3)
+
+
+def test_population_colors_support_paper_and_arbitrary_demo_sizes():
+    colors = _population_color_map([16, 4, 100, 50, 4])
+
+    assert list(colors) == [4, 16, 50, 100]
+    assert colors[50] == "#d9a21b"
+    assert colors[100] == "#3c8dbc"
+    assert colors[4] != colors[16]
+    assert colors[4] != colors[50]
 
 
 def test_cli_mobility_defaults_are_explicit():
