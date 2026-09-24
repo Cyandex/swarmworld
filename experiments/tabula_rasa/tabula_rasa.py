@@ -14,6 +14,9 @@ Optional treatments:
                muted: agents still "speak", but nobody hears anything (control).
   --team-weight  share of reward that comes from the group's survival. Without a shared
                  stake, a speaker gains nothing from informing others.
+  --sharing    adds FEED_<material> actions: hand 0.25 of a material to the hungriest
+               agent on your own or an adjacent tile. The recipient metabolises it (poison
+               hurts them), and the helper earns 10% of the energy the recipient gained.
 
 Usage:
     python experiments/tabula_rasa/tabula_rasa.py --episodes 300 --out runs/tabula_rasa
@@ -41,48 +44,61 @@ from biofoundry.types import ActionType, AgentAction, Direction, Resource
 ROOT = Path(__file__).resolve().parents[2]
 RESOURCES = [r for r in Resource if r != Resource.NONE]  # 8 materials
 
-# --- action space: 14 discrete choices ------------------------------------------------
-ACTIONS: list[dict] = [{"verb": ActionType.WAIT}]
-ACTIONS += [{"verb": ActionType.MOVE, "direction": d} for d in
-            (Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)]
-ACTIONS += [{"verb": ActionType.HARVEST}]
-ACTIONS += [{"verb": ActionType.METABOLIZE, "resource": r, "amount": 0.25} for r in RESOURCES]
-N_ACTIONS = len(ACTIONS)
-ACTION_NAMES = ["WAIT", "N", "E", "S", "W", "HARVEST"] + [f"EAT_{r.name}" for r in RESOURCES]
-EAT_OFFSET = 6
-
 # --- poison ----------------------------------------------------------------------------
 POISON = Resource.CHITIN
 POISON_DAMAGE = 0.20  # energy lost per 0.25 mass eaten
+
+# --- sharing: feeding a neighbour pays the helper a small bonus ------------------------
+HELP_BONUS = 0.10  # helper gains 10% of the energy the recipient gained
 
 # --- language: raw symbols without any built-in meaning --------------------------------
 ALPHABET = ["_"] + list(string.ascii_uppercase) + list(string.digits)  # "_" = silence
 N_SYMBOLS = len(ALPHABET)
 HEAR_RADIUS = 6
 
-# --- token vocabulary: each field gets its own id range (a tiny "world language") -----
-FIELDS = {
-    "tile_res": 9,
-    "tile_mass": 4,
-    "adj_n": 10, "adj_e": 10, "adj_s": 10, "adj_w": 10,  # 9 resources + blocked
-    "energy": 10,
-    "held": 256,  # bitmask of which of the 8 materials are in inventory
-    "last_action": N_ACTIONS,
-    "last_ok": 2,
-    "energy_trend": 5,  # big drop, drop, flat, gain, big gain
-    "said": N_SYMBOLS,  # own last symbol (lets multi-tick "words" form)
-    "heard": N_SYMBOLS,  # nearest speaker's symbol this tick
-    "heard_dir": 5,  # none, N, E, S, W
-    "heard_dist": 4,
-}
-OFFSETS, _o = {}, 0
-for _name, _size in FIELDS.items():
-    OFFSETS[_name] = _o
-    _o += _size
-VOCAB = _o
-TOK_PER_TICK = len(FIELDS)
+EAT_OFFSET = 6
+FEED_OFFSET = 6 + len(RESOURCES)
 CONTEXT_TICKS = 6
-BLOCK = TOK_PER_TICK * CONTEXT_TICKS
+
+
+def configure(sharing: bool = False) -> None:
+    """Build the action space and token vocabulary. 14 actions, or 22 with FEED_<material>."""
+    global ACTIONS, ACTION_NAMES, N_ACTIONS, FIELDS, OFFSETS, VOCAB, TOK_PER_TICK, BLOCK
+    ACTIONS = [{"verb": ActionType.WAIT}]
+    ACTIONS += [{"verb": ActionType.MOVE, "direction": d} for d in
+                (Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST)]
+    ACTIONS += [{"verb": ActionType.HARVEST}]
+    ACTIONS += [{"verb": ActionType.METABOLIZE, "resource": r, "amount": 0.25} for r in RESOURCES]
+    ACTION_NAMES = ["WAIT", "N", "E", "S", "W", "HARVEST"] + [f"EAT_{r.name}" for r in RESOURCES]
+    if sharing:
+        ACTIONS += [{"verb": "FEED", "resource": r} for r in RESOURCES]
+        ACTION_NAMES += [f"FEED_{r.name}" for r in RESOURCES]
+    N_ACTIONS = len(ACTIONS)
+    # token vocabulary: each field gets its own id range (a tiny "world language")
+    FIELDS = {
+        "tile_res": 9,
+        "tile_mass": 4,
+        "adj_n": 10, "adj_e": 10, "adj_s": 10, "adj_w": 10,  # 9 resources + blocked
+        "energy": 10,
+        "held": 256,  # bitmask of which of the 8 materials are in inventory
+        "last_action": N_ACTIONS,
+        "last_ok": 2,
+        "energy_trend": 5,  # big drop, drop, flat, gain, big gain
+        "said": N_SYMBOLS,  # own last symbol (lets multi-tick "words" form)
+        "heard": N_SYMBOLS,  # nearest speaker's symbol this tick
+        "heard_dir": 5,  # none, N, E, S, W
+        "heard_dist": 4,
+    }
+    OFFSETS, offset = {}, 0
+    for name, size in FIELDS.items():
+        OFFSETS[name] = offset
+        offset += size
+    VOCAB = offset
+    TOK_PER_TICK = len(FIELDS)
+    BLOCK = TOK_PER_TICK * CONTEXT_TICKS
+
+
+configure()
 
 
 def make_config(max_ticks: int):
@@ -112,10 +128,12 @@ def trend_bin(delta: float) -> int:
 class World:
     """Wraps the authoritative simulation and turns it into per-agent token streams."""
 
-    def __init__(self, seed: int, max_ticks: int, poison: bool = False, language: str = "off"):
+    def __init__(self, seed: int, max_ticks: int, poison: bool = False, language: str = "off",
+                 sharing: bool = False):
         self.sim = BioFoundrySimulation(make_config(max_ticks))
         self.sim.reset(seed)
-        self.poison, self.language = poison, language
+        self.poison, self.language, self.sharing = poison, language, sharing
+        self.social = Counter()  # feeding statistics
         self.n = self.sim.population.size
         self.history = np.zeros((self.n, CONTEXT_TICKS, TOK_PER_TICK), dtype=np.int64)
         self.last_action = np.zeros(self.n, dtype=np.int64)
@@ -196,15 +214,59 @@ class World:
                 direction = 2 if dx > 0 else 4
             self.heard[i] = (symbols[j], direction, min(dist // 2, 3))
 
+    def _feed(self, i: int, resource: Resource) -> str | None:
+        """Agent i feeds 0.25 of `resource` to the hungriest agent on its own or an adjacent
+        tile. The recipient metabolises it (poison hurts the recipient); the helper earns
+        HELP_BONUS of the energy the recipient actually gained. Returns None if impossible."""
+        pop, r = self.sim.population, int(resource)
+        held = float(pop.inventory[i, r])
+        if held <= 0.05:
+            return None
+        near = [j for j in range(self.n) if j != i and pop.active[j]
+                and abs(int(pop.x[j] - pop.x[i])) + abs(int(pop.y[j] - pop.y[i])) <= 1]
+        if not near:
+            return None
+        j = min(near, key=lambda k: (float(pop.energy[k]), k))
+        hungrier = float(pop.energy[j]) < float(pop.energy[i])
+        mass = min(0.25, held)
+        if self.poison and resource == POISON:
+            pop.inventory[i, r] -= np.float32(mass)
+            pop.energy[j] = np.float32(max(0.0, float(pop.energy[j]) - POISON_DAMAGE * mass / 0.25))
+            self.social["poison_feeds"] += 1
+            return "poison"
+        frac = float(FEEDSTOCK_COMPOSITION[resource][[0, 1, 2, 4]].sum())
+        if frac < 0.20:
+            return None
+        eco = self.sim.config.economy
+        per_mass = frac * eco.metabolize_efficiency
+        consumed = min(mass, (eco.maximum_energy - float(pop.energy[j])) / per_mass)
+        if consumed <= 1e-9:
+            return None
+        gained = consumed * per_mass
+        pop.inventory[i, r] -= np.float32(consumed)
+        pop.energy[j] = np.float32(min(eco.maximum_energy, float(pop.energy[j]) + gained))
+        bonus = HELP_BONUS * gained
+        pop.energy[i] = np.float32(min(eco.maximum_energy, float(pop.energy[i]) + bonus))
+        self.social["good_feeds"] += 1
+        self.social["good_feeds_to_hungrier"] += int(hungrier)
+        self.social["energy_given"] += gained
+        self.social["helper_bonus"] += bonus
+        return "good"
+
     def step(self, action_ids: np.ndarray, symbols: np.ndarray) -> tuple[np.ndarray, bool, dict]:
         pop = self.sim.population
         alive_before = self.alive()
         ids = pop.agent_ids
-        poisoned = []
+        poisoned, failed = [], set()
         actions = {}
         for i, a in enumerate(action_ids):
             spec = dict(ACTIONS[a])
-            if (self.poison and alive_before[i] and spec["verb"] == ActionType.METABOLIZE
+            if spec["verb"] == "FEED":
+                outcome = self._feed(i, spec["resource"]) if alive_before[i] else None
+                if outcome is None:
+                    failed.add(i)
+                spec = {"verb": ActionType.WAIT}
+            elif (self.poison and alive_before[i] and spec["verb"] == ActionType.METABOLIZE
                     and spec["resource"] == POISON and pop.inventory[i, int(POISON)] > 0.05):
                 eaten = min(0.25, float(pop.inventory[i, int(POISON)]))
                 pop.inventory[i, int(POISON)] -= np.float32(eaten)
@@ -227,7 +289,7 @@ class World:
             if not alive_after[i]:
                 continue
             self.last_action[i] = action_ids[i]
-            self.last_ok[i] = 0 if ids[i] in rejected else 1
+            self.last_ok[i] = 0 if ids[i] in rejected or i in failed else 1
             self.said[i] = symbols[i]
             trend = trend_bin(float(energy[i] - self.prev_energy[i]))
             self.history[i, :-1] = self.history[i, 1:]
@@ -307,7 +369,8 @@ def scripted_actions(world: World, rng) -> np.ndarray:
 
 
 def run_episode(policy, seed, args, model=None, rng=None, record=False, log_speech=False):
-    world = World(seed, args.ticks, poison=args.poison, language=args.language)
+    world = World(seed, args.ticks, poison=args.poison, language=args.language,
+                  sharing=args.sharing)
     speak = args.language != "off"
     buf = {"ctx": [], "act": [], "sym": [], "logp": [], "val": [], "rew": [], "mask": []}
     meals, choices, done = Counter(), Counter(), False
@@ -355,6 +418,7 @@ def run_episode(policy, seed, args, model=None, rng=None, record=False, log_spee
         "survivors": int(pop.active.sum()),
         "agents": world.n,
         "meals": dict(meals),
+        "social": {k: round(float(v), 4) for k, v in world.social.items()},
         "action_mix": {k: round(v / max(1, sum(choices.values())), 3) for k, v in choices.most_common()},
     }
     return stats, buf, speech_log
@@ -483,6 +547,7 @@ def main():
     ap.add_argument("--poison", action="store_true")
     ap.add_argument("--language", choices=["off", "on", "muted"], default="off")
     ap.add_argument("--team-weight", type=float, default=0.0)
+    ap.add_argument("--sharing", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--out", default=str(ROOT / "runs" / "tabula_rasa"))
@@ -490,12 +555,14 @@ def main():
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(args.seed); rng = np.random.default_rng(args.seed)
     torch.set_num_threads(args.threads)
+    configure(args.sharing)
 
     model = TinyGPT()
     opt = torch.optim.Adam(model.parameters(), lr=3e-4)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"TinyGPT: {n_params:,} parameters, vocab {VOCAB}, context {BLOCK} tokens, "
-          f"poison={args.poison} language={args.language} team_weight={args.team_weight}")
+          f"poison={args.poison} language={args.language} team_weight={args.team_weight} "
+          f"sharing={args.sharing}")
 
     eval_seeds = list(range(1000, 1000 + args.eval_seeds))
 
@@ -505,12 +572,15 @@ def main():
             stats, _, log = run_episode(policy, s, args, model=model, rng=np.random.default_rng(s),
                                         log_speech=log_speech)
             runs.append(stats); logs.extend(log)
-        meals = Counter()
+        meals, social = Counter(), Counter()
         for r in runs:
             meals.update(r["meals"])
+            social.update(r["social"])
         result = {"mean_lifespan": round(float(np.mean([r["mean_lifespan"] for r in runs])), 1),
                   "survival_rate": round(sum(r["survivors"] for r in runs) / sum(r["agents"] for r in runs), 3),
-                  "meals": dict(meals.most_common()), "action_mix": runs[0]["action_mix"]}
+                  "meals": dict(meals.most_common()),
+                  "social": {k: round(float(v), 3) for k, v in social.items()},
+                  "action_mix": runs[0]["action_mix"]}
         return result, logs
 
     report = {"config": vars(args), "params": n_params,
@@ -524,10 +594,14 @@ def main():
         stats, buf, _ = run_episode("gpt", seed=ep, args=args, model=model, record=True)
         ppo_update(model, opt, buf, args.language != "off", args.team_weight)
         curve.append({"episode": ep, "mean_lifespan": stats["mean_lifespan"],
-                      "survivors": stats["survivors"], "meals": stats["meals"]})
+                      "survivors": stats["survivors"], "meals": stats["meals"],
+                      "social": stats["social"]})
         if ep % 10 == 0 or ep == args.episodes - 1:
             print(f"ep {ep:4d}  lifespan {stats['mean_lifespan']:6.1f}  survivors {stats['survivors']:2d}/12"
-                  f"  meals {dict(Counter(stats['meals']).most_common(4))}  [{time.time() - t0:.0f}s]", flush=True)
+                  f"  meals {dict(Counter(stats['meals']).most_common(4))}"
+                  + (f"  feeds {stats['social'].get('good_feeds', 0):.0f}/"
+                     f"{stats['social'].get('poison_feeds', 0):.0f}p" if args.sharing else "")
+                  + f"  [{time.time() - t0:.0f}s]", flush=True)
 
     report["gpt_after_training"], log = evaluate("gpt", log_speech=True)
     report["probe_after"] = edibility_probe(model)
