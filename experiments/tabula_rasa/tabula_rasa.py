@@ -435,7 +435,7 @@ class TinyGPT(nn.Module):
         self.value = nn.Linear(d, 1)
 
     def forward(self, idx):
-        x = self.tok(idx) + self.pos(torch.arange(idx.shape[1]))
+        x = self.tok(idx) + self.pos(torch.arange(idx.shape[1], device=idx.device))
         x = self.ln(self.blocks(x))[:, -1]
         return self.policy(x), self.speech(x), self.value(x).squeeze(-1)
 
