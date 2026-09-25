@@ -121,3 +121,45 @@ Findings:
 
 `edibility_probe` ignored the predator/companion tokens before this commit, so the
 "P(eat chitin)" probe values in the predator runs' `report.json` files are invalid.
+
+## Experiment 4: a gradient-free counting agent (Netta principles)
+
+`netta_agent.py` replaces TinyGPT + PPO with a table of lived counts, following the
+principles of [Netta](https://github.com/Cyandex/netta): for every lived (situation,
+action) it keeps the count and the summed discounted return (the PPO reward), backs off
+from a fine to a coarse situation (`Q_k = (sum_k + 4 * Q_{k-1}) / (n_k + 4)`), acts from
+ignorance with probability 0.1 and otherwise takes the best lived action. No weights, no
+gradients. Same world, senses of the current tick, reward, 300 training episodes and eval
+seeds as the PPO runs. Three training seeds per world; eval survival with epsilon 0.1 /
+greedy (PPO: its sampled policy, one training seed).
+
+| world | counting agent, seeds 0/1/2 (eps 0.1) | mean eps 0.1 / greedy | TinyGPT + PPO | scripted | random |
+|---|---|--:|--:|--:|--:|
+| poison, blind (A) | 77 / 77 / 87 % | **80 % / 89 %** | 15 % | 65 % | 23 % |
+| poison, sees others (P2) | 60 / 73 / 55 % | 63 % / 61 % | **72 %** | 65 % | 23 % |
+| poison, predators, sees others (P1) | 30 / 23 / 30 % | 28 % / 28 % | **68 %** | 63 % | 8 % |
+
+- In the small world the counting agent beats PPO by far and even the scripted agent
+  with innate food knowledge, in all three seeds, after ~12 CPU minutes per run instead
+  of ~3 hours.
+- Each added sense multiplies the number of distinct situations (fine-level table:
+  39-58k in A, 84-98k in P2, 82-100k in P1). A table cannot generalise to situations it
+  has not lived; the neural policy can, and wins once predators are added.
+- The per-material "eat vs wait" probe read from the coarsest level is noisy across
+  seeds and is not interpreted; chitin stays 1 % or less of eval meals in all runs.
+- Caveat: PPO has one training seed per world and was not tuned; its A result (below
+  random) is likely a poor run rather than the ceiling of the method.
+
+Netta's own unmodified builder and verifier (`netta.c`, `netta_check.c`) were also run
+on text logs of SwarmWorld lives (one line per agent-tick, e.g. "on fungus energy 9 do
+harvest ok same."). Held-out bits/byte, lower is better:
+
+| life log | byte trigram | Netta units | units + field | word trigram | xz -9e |
+|---|--:|--:|--:|--:|--:|
+| scripted agents, 515 KB | 0.392 | **0.130** | 0.129 | 0.223 | 0.137 |
+| random agents, 370 KB | 0.559 | **0.268** | 0.266 | 0.290 | 0.287 |
+
+The unit model beats xz and the word trigram on these repetitive worlds (units average
+38-76 bytes, i.e. whole memorised lines). The field again misses Netta's own frozen
+margin of 0.01 bits/byte. `netta_check.c` does not build with the prescribed `-Werror`
+under GCC 13.3 (a maybe-uninitialized warning); it was built without `-Werror`.
