@@ -572,11 +572,10 @@ def edibility_probe(model) -> dict:
     probability that it chooses to eat it."""
     out = {}
     for bit, r in enumerate(RESOURCES):
-        frame = np.asarray([OFFSETS[k] + v for k, v in {
-            "tile_res": 0, "tile_mass": 0, "adj_n": 0, "adj_e": 0, "adj_s": 0, "adj_w": 0,
-            "energy": 3, "held": 1 << bit, "last_action": 5, "last_ok": 1, "energy_trend": 1,
-            "said": 0, "heard": 0, "heard_dir": 0, "heard_dist": 0,
-        }.items()])
+        vals = {k: 0 for k in FIELDS}  # every optional sense set to "nothing noticed"
+        vals.update({"energy": 3, "held": 1 << bit, "last_action": 5, "last_ok": 1,
+                     "energy_trend": 1})
+        frame = np.asarray([OFFSETS[k] + vals[k] for k in FIELDS])
         ctx = torch.from_numpy(np.tile(frame, CONTEXT_TICKS))[None]
         with torch.no_grad():
             p = torch.softmax(model(ctx)[0], -1)[0]

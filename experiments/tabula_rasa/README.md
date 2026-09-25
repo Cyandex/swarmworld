@@ -77,3 +77,47 @@ Findings:
 Caveats: one training run per condition, and evaluation survival disagrees with late
 training survival by up to 11 points, so differences between A-E of this size are within
 run-to-run noise.
+
+## Experiment 3: predators
+
+Three predators chase agents within 6 tiles; an attack on an adjacent agent succeeds
+with probability 0.6 / (1 + companions within 2 tiles) and costs 0.6 energy. Agents
+sense the nearest predator within 4 tiles. `--see-others` additionally lets agents sense
+the nearest other agent within 4 tiles and the number within 2. All runs: poison on,
+reward = own survival only, one training run of 300 episodes each.
+
+| run | predators | sees others | language | feeding | survival (eval / last 50 training eps) | grouping index | in contact (<=1 tile) |
+|---|:-:|:-:|:-:|:-:|--:|--:|--:|
+| E (from exp. 2) | - | - | on | yes | 30 % / 33 % | 1.16 | 0.1 % |
+| F | yes | - | on | yes | 23 % / 27 % | 1.08 | 1.5 % |
+| G | yes | yes | on | yes | 25 % / 23 % | 1.33 | 2.8 % |
+| P1 | yes | yes | off | - | 68 % / 60 % | 1.30 | 11.6 % |
+| P2 | - | yes | off | - | 72 % / 79 % | 1.53 | 14.1 % |
+| random (no predators) | - | - | - | - | 23 % | 1.26 | 1.4 % |
+| scripted (no predators) | - | - | - | - | 65 % | 1.24 | 2.8 % |
+
+Findings:
+
+- **Seeing each other, not danger, produced grouping.** P2 (no predators) is the most
+  clustered run so far (14 % of agent-ticks in direct contact, 10x random walkers) and
+  survives best. Adding predators (P1) slightly *reduced* grouping. A plausible reading is
+  local enhancement: other agents mark where food is.
+- **Predators mostly hit loners**: of 75 attacks in P1's evaluation, 66 were on agents
+  with no companion nearby.
+- **Flight rather than herding**: when a predator is within 4 tiles, the share of MOVE
+  actions rises in P1 (21 % -> 29 %) and F (6 % -> 22 %), not in G (5 % -> 3 %). P1 has a
+  strong "run west" reflex (84-88 % W with a predator adjacent in a probe).
+- **Alarm cues on the speaker side**: symbols carry information about a nearby predator
+  (F 0.029 bits vs 0.002 shuffled p95; G 0.011 vs 0.002), with distinct symbols when a
+  predator is near. There was no muted control for F/G, so this may be the same
+  by-product seen for hunger. Listeners do not react measurably (heard symbol vs action
+  below the shuffle p95 in both).
+- **Feeding stays rare**: 0 successful feeds in F, 16 in G (E: 10).
+- Poison is still avoided in eval (chitin is 0-3 % of meals), although chitin eaten
+  during training rose again in P1/P2 as agents lived longer and ate more.
+- The 22-action + speech runs (E, F, G) survive far worse than the 14-action runs
+  without speech (P1, P2); action space size and the extra speech output are confounded
+  with the treatments here.
+
+`edibility_probe` ignored the predator/companion tokens before this commit, so the
+"P(eat chitin)" probe values in the predator runs' `report.json` files are invalid.
