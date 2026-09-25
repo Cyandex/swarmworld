@@ -40,7 +40,7 @@ def measure(policy: str, cfg: dict, seeds: list[int], model=None) -> dict:
     nn_obs, nn_null, contact, hearing = [], [], [], []
     for seed in seeds:
         world = tr.World(seed, cfg["ticks"], poison=cfg["poison"], language=cfg["language"],
-                         sharing=cfg.get("sharing", False))
+                         sharing=cfg.get("sharing", False), predators=cfg.get("predators", False))
         walk_y, walk_x = np.nonzero(world.sim.world.walkable)
         policy_rng = np.random.default_rng(seed)
         done = False
@@ -89,15 +89,17 @@ def main():
     results = {}
     for run in map(Path, args.runs):
         cfg = json.loads((run / "report.json").read_text())["config"]
-        tr.configure(cfg.get("sharing", False))
+        tr.configure(cfg.get("sharing", False), cfg.get("predators", False), cfg.get("see_others", False))
         model = tr.TinyGPT()
         model.load_state_dict(torch.load(run / "tinygpt.pt"))
         model.eval()
         results[run.name] = measure("gpt", cfg, seeds, model)
+        first_cfg = first_cfg if "first_cfg" in locals() else cfg
         print(run.name, results[run.name], flush=True)
     if args.baselines:
-        cfg = {"ticks": 400, "poison": True, "language": "off"}
-        tr.configure(False)
+        cfg = {"ticks": 400, "poison": True, "language": "off",
+               "predators": first_cfg.get("predators", False)}
+        tr.configure(False, cfg["predators"])
         for policy in ("random", "scripted"):
             results[policy] = measure(policy, cfg, seeds)
             print(policy, results[policy], flush=True)

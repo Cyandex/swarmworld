@@ -17,6 +17,12 @@ Optional treatments:
   --sharing    adds FEED_<material> actions: hand 0.25 of a material to the hungriest
                agent on your own or an adjacent tile. The recipient metabolises it (poison
                hurts them), and the helper earns 10% of the energy the recipient gained.
+  --predators  three predators roam and chase agents within 6 tiles. An attack on an
+               adjacent agent succeeds with probability 0.6 / (1 + companions within 2
+               tiles) and costs 0.6 energy - safety in numbers. Agents sense the nearest
+               predator within 4 tiles.
+  --see-others agents sense the nearest other agent within 4 tiles and how many others
+               are within 2 tiles (otherwise they can only hear calls).
 
 Usage:
     python experiments/tabula_rasa/tabula_rasa.py --episodes 300 --out runs/tabula_rasa
@@ -56,13 +62,24 @@ ALPHABET = ["_"] + list(string.ascii_uppercase) + list(string.digits)  # "_" = s
 N_SYMBOLS = len(ALPHABET)
 HEAR_RADIUS = 6
 
+# --- predators: hunt nearby agents; a victim surrounded by others is safer -------------
+N_PREDATORS = 3
+HUNT_RADIUS = 6  # predators chase agents within this distance, otherwise they roam
+SENSE_RADIUS = 4  # agents sense predators (and, with --see-others, each other) this far
+GROUP_RADIUS = 2  # companions within this distance of a victim dilute the attack
+ATTACK_SUCCESS = 0.6  # success chance of an attack on a lone agent; / (1 + companions)
+ATTACK_DAMAGE = 0.6  # energy lost when an attack succeeds
+PREDATOR_REST = 12  # ticks a predator rests after any attack
+
 EAT_OFFSET = 6
 FEED_OFFSET = 6 + len(RESOURCES)
 CONTEXT_TICKS = 6
 
 
-def configure(sharing: bool = False) -> None:
-    """Build the action space and token vocabulary. 14 actions, or 22 with FEED_<material>."""
+def configure(sharing: bool = False, predators: bool = False, see_others: bool = False) -> None:
+    """Build the action space and token vocabulary. 14 actions, or 22 with FEED_<material>.
+    Predator and companion senses add tokens only when enabled, so older runs stay
+    reproducible."""
     global ACTIONS, ACTION_NAMES, N_ACTIONS, FIELDS, OFFSETS, VOCAB, TOK_PER_TICK, BLOCK
     ACTIONS = [{"verb": ActionType.WAIT}]
     ACTIONS += [{"verb": ActionType.MOVE, "direction": d} for d in
@@ -89,6 +106,10 @@ def configure(sharing: bool = False) -> None:
         "heard_dir": 5,  # none, N, E, S, W
         "heard_dist": 4,
     }
+    if predators:
+        FIELDS.update({"pred_dir": 5, "pred_dist": 4})  # nearest predator within SENSE_RADIUS
+    if see_others:
+        FIELDS.update({"mate_dir": 5, "mate_dist": 4, "mates_near": 4})
     OFFSETS, offset = {}, 0
     for name, size in FIELDS.items():
         OFFSETS[name] = offset
@@ -129,11 +150,13 @@ class World:
     """Wraps the authoritative simulation and turns it into per-agent token streams."""
 
     def __init__(self, seed: int, max_ticks: int, poison: bool = False, language: str = "off",
-                 sharing: bool = False):
+                 sharing: bool = False, predators: bool = False):
         self.sim = BioFoundrySimulation(make_config(max_ticks))
         self.sim.reset(seed)
         self.poison, self.language, self.sharing = poison, language, sharing
-        self.social = Counter()  # feeding statistics
+        self.social = Counter()  # feeding and predation statistics
+        self.rng = np.random.default_rng(seed + 7919)
+        self.predators = self._spawn_predators() if predators else np.zeros((0, 3), dtype=np.int64)
         self.n = self.sim.population.size
         self.history = np.zeros((self.n, CONTEXT_TICKS, TOK_PER_TICK), dtype=np.int64)
         self.last_action = np.zeros(self.n, dtype=np.int64)
@@ -150,11 +173,86 @@ class World:
             return 9
         return int(w.resource_kind[y, x]) if w.resource_mass[y, x] > 0.05 else 0
 
+    def _spawn_predators(self) -> np.ndarray:
+        pop, w = self.sim.population, self.sim.world
+        ys, xs = np.nonzero(w.walkable)
+        far = [k for k in range(len(xs))
+               if (np.abs(pop.x - xs[k]) + np.abs(pop.y - ys[k])).min() >= 2 * HUNT_RADIUS]
+        pick = self.rng.choice(far, N_PREDATORS, replace=False)
+        return np.stack([xs[pick], ys[pick], np.zeros(N_PREDATORS, dtype=np.int64)], axis=1)
+
+    @staticmethod
+    def _direction(dx: int, dy: int) -> int:
+        if dx == 0 and dy == 0:
+            return 0
+        if abs(dy) >= abs(dx):
+            return 1 if dy < 0 else 3
+        return 2 if dx > 0 else 4
+
+    def _nearest(self, x: int, y: int, xs, ys, radius: int):
+        """(direction token, distance token) of the nearest point within radius, else (0, 0)."""
+        if len(xs) == 0:
+            return 0, 0
+        d = np.abs(xs - x) + np.abs(ys - y)
+        k = int(np.argmin(d))
+        if d[k] > radius:
+            return 0, 0
+        return self._direction(int(xs[k] - x), int(ys[k] - y)), min(int(d[k]), 3)
+
+    def _others(self, i: int):
+        pop = self.sim.population
+        mask = pop.active.copy()
+        mask[i] = False
+        return pop.x[mask].astype(int), pop.y[mask].astype(int)
+
+    def _companions(self, i: int, radius: int) -> int:
+        pop = self.sim.population
+        xs, ys = self._others(i)
+        return int(((np.abs(xs - int(pop.x[i])) + np.abs(ys - int(pop.y[i]))) <= radius).sum())
+
+    def _move_predators(self) -> None:
+        """Predators roam, chase the nearest agent within HUNT_RADIUS and attack when
+        adjacent. Success chance falls with every companion near the victim."""
+        pop, w = self.sim.population, self.sim.world
+        alive = np.nonzero(pop.active)[0]
+        for p in self.predators:
+            x, y, rest = int(p[0]), int(p[1]), int(p[2])
+            target = None
+            if rest > 0:
+                p[2] -= 1
+            elif len(alive):
+                d = np.abs(pop.x[alive] - x) + np.abs(pop.y[alive] - y)
+                if d.min() <= HUNT_RADIUS:
+                    target = int(alive[int(np.argmin(d))])
+            if target is None:
+                steps = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+                dx, dy = steps[int(self.rng.integers(4))]
+            else:
+                tx, ty = int(pop.x[target]) - x, int(pop.y[target]) - y
+                dx, dy = (int(np.sign(tx)), 0) if abs(tx) > abs(ty) else (0, int(np.sign(ty)))
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w.width and 0 <= ny < w.height and w.walkable[ny, nx]:
+                p[0], p[1] = nx, ny
+            if target is None:
+                continue
+            if abs(int(pop.x[target]) - int(p[0])) + abs(int(pop.y[target]) - int(p[1])) <= 1:
+                companions = self._companions(target, GROUP_RADIUS)
+                self.social["attacks"] += 1
+                self.social[f"attacks_on_group_of_{min(companions, 3) + 1}"] += 1
+                if self.rng.random() < ATTACK_SUCCESS / (1 + companions):
+                    pop.energy[target] = np.float32(max(0.0, float(pop.energy[target]) - ATTACK_DAMAGE))
+                    self.social["successful_attacks"] += 1
+                    self.social[f"hits_on_group_of_{min(companions, 3) + 1}"] += 1
+                p[2] = PREDATOR_REST
+
     def situation(self, i: int) -> dict:
         """Ground truth about an agent's situation, used only for analysing speech."""
         pop = self.sim.population
         x, y = int(pop.x[i]), int(pop.y[i])
-        return {"tile": min(self._res_at(x, y), 8), "energy": min(int(pop.energy[i] * 10), 9)}
+        danger = self._nearest(x, y, self.predators[:, 0], self.predators[:, 1], SENSE_RADIUS)[0] > 0 \
+            if len(self.predators) else False
+        return {"tile": min(self._res_at(x, y), 8), "energy": min(int(pop.energy[i] * 10), 9),
+                "danger": int(danger)}
 
     def _encode(self, i: int, trend: int) -> np.ndarray:
         pop, w = self.sim.population, self.sim.world
@@ -180,7 +278,14 @@ class World:
             "heard_dir": int(self.heard[i, 1]),
             "heard_dist": int(self.heard[i, 2]),
         }
-        return np.asarray([OFFSETS[k] + v for k, v in vals.items()], dtype=np.int64)
+        if "pred_dir" in FIELDS:
+            vals["pred_dir"], vals["pred_dist"] = self._nearest(
+                x, y, self.predators[:, 0], self.predators[:, 1], SENSE_RADIUS)
+        if "mate_dir" in FIELDS:
+            xs, ys = self._others(i)
+            vals["mate_dir"], vals["mate_dist"] = self._nearest(x, y, xs, ys, SENSE_RADIUS)
+            vals["mates_near"] = min(self._companions(i, GROUP_RADIUS), 3)
+        return np.asarray([OFFSETS[k] + vals[k] for k in FIELDS], dtype=np.int64)
 
     def contexts(self) -> np.ndarray:
         return self.history.reshape(self.n, BLOCK).copy()
@@ -275,6 +380,8 @@ class World:
                 spec = {"verb": ActionType.WAIT}
             actions[ids[i]] = AgentAction.from_value(spec)
         result = self.sim.step(actions)
+        if len(self.predators):
+            self._move_predators()
         rejected = {e.payload.get("agent") for e in result.events if e.kind == "action_rejected"}
         meals = Counter(Resource(int(e.payload["resource"])).name
                         for e in result.events if e.kind == "resource_metabolized")
@@ -370,7 +477,7 @@ def scripted_actions(world: World, rng) -> np.ndarray:
 
 def run_episode(policy, seed, args, model=None, rng=None, record=False, log_speech=False):
     world = World(seed, args.ticks, poison=args.poison, language=args.language,
-                  sharing=args.sharing)
+                  sharing=args.sharing, predators=getattr(args, "predators", False))
     speak = args.language != "off"
     buf = {"ctx": [], "act": [], "sym": [], "logp": [], "val": [], "rew": [], "mask": []}
     meals, choices, done = Counter(), Counter(), False
@@ -532,6 +639,11 @@ def speech_analysis(log: list[dict], rng) -> dict:
         "top_symbols": [(s, round(c / total, 3)) for s, c in usage.most_common(8)],
         "mi_symbol_vs_tile": mi_vs_shuffle([e["tile"] for e in log], sym),
         "mi_symbol_vs_energy": mi_vs_shuffle([e["energy"] for e in log], sym),
+        "mi_symbol_vs_danger": mi_vs_shuffle([e["danger"] for e in log], sym),
+        "danger_calls": {
+            "with_predator_near": Counter(ALPHABET[e["symbol"]] for e in log if e["danger"]).most_common(3),
+            "without": Counter(ALPHABET[e["symbol"]] for e in log if not e["danger"]).most_common(3),
+        },
         "mi_heard_vs_action": mi_vs_shuffle([e["heard"] for e in heard], [e["action"] for e in heard]),
         "favourite_symbols_by_tile": vocab,
         "top_bigrams": bigrams.most_common(8),
@@ -548,6 +660,8 @@ def main():
     ap.add_argument("--language", choices=["off", "on", "muted"], default="off")
     ap.add_argument("--team-weight", type=float, default=0.0)
     ap.add_argument("--sharing", action="store_true")
+    ap.add_argument("--predators", action="store_true")
+    ap.add_argument("--see-others", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--out", default=str(ROOT / "runs" / "tabula_rasa"))
@@ -555,14 +669,14 @@ def main():
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(args.seed); rng = np.random.default_rng(args.seed)
     torch.set_num_threads(args.threads)
-    configure(args.sharing)
+    configure(args.sharing, args.predators, args.see_others)
 
     model = TinyGPT()
     opt = torch.optim.Adam(model.parameters(), lr=3e-4)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"TinyGPT: {n_params:,} parameters, vocab {VOCAB}, context {BLOCK} tokens, "
           f"poison={args.poison} language={args.language} team_weight={args.team_weight} "
-          f"sharing={args.sharing}")
+          f"sharing={args.sharing} predators={args.predators} see_others={args.see_others}")
 
     eval_seeds = list(range(1000, 1000 + args.eval_seeds))
 
