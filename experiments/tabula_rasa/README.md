@@ -163,3 +163,28 @@ The unit model beats xz and the word trigram on these repetitive worlds (units a
 38-76 bytes, i.e. whole memorised lines). The field again misses Netta's own frozen
 margin of 0.01 bits/byte. `netta_check.c` does not build with the prescribed `-Werror`
 under GCC 13.3 (a maybe-uninitialized warning); it was built without `-Werror`.
+
+## Experiment 5: hybrid of memory and TinyGPT
+
+`hybrid_agent.py` joins the counting memory of experiment 4 and TinyGPT into one agent.
+Per agent and tick the memory decides with probability `w = n / (n + 10)` (`n` = visits
+of this exact situation), otherwise TinyGPT samples its policy. After every episode
+TinyGPT "sleeps": it is trained on contexts from the last 20 episodes towards the memory's
+preference `softmax(Q / 0.05)`, weighted by `w`. TinyGPT never sees the reward itself.
+One training seed per world, 300 episodes, 4096 replayed contexts per sleep (CPU). The
+trained unit is evaluated three ways on the usual eval seeds:
+
+| world | hybrid | its memory alone | its TinyGPT alone | memory decides (hybrid) | earlier best |
+|---|--:|--:|--:|--:|--:|
+| poison, blind (A) | **83 %** | 77 % | 58 % | 80 % | 80 % counting agent (mean of 3) |
+| poison, sees others (P2) | 50 % | 53 % | 47 % | 69 % | 72 % PPO |
+| poison, predators, sees others (P1) | 22 % | 18 % | 22 % | 64 % | 68 % PPO |
+
+- In A the hybrid is as good as the counting agent (77-87 % across its seeds), not better.
+- Knowledge does pass from memory into TinyGPT: trained only on the memory's
+  preferences, TinyGPT alone survives 58 % in A, against 15 % for TinyGPT trained with PPO.
+- In P2 and P1 the hybrid stays at the level of its teacher and far below PPO. TinyGPT can
+  only generalise what the memory knows; with predators the memory knows little. A
+  natural next step is to let TinyGPT learn from the reward as well (PPO + sleep).
+- One seed per world; with 60 evaluated agents per cell, differences of less than about
+  10 points are within noise.
